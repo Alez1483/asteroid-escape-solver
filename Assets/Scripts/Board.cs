@@ -9,6 +9,28 @@ public class Board : MonoBehaviour
     
     private void Awake()
     {
-        Solver.FindReachablePositions(this);
+        Piece spacecraft = pieceList[8];
+
+        var visits = Solver.FindReachablePositions(this);
+
+        int count = 0;
+
+        foreach (Visit visit in visits)
+        {
+            if (Solver.IsSolution(visit.board, pieceList))
+            {
+                var directions = Solver.VisitToPath(visit);
+                //string arrows = "^>v<";
+                //
+                //foreach (var dir in directions)
+                //{
+                //    print(arrows[dir.Item1] + ": " + dir.Item2);
+                //}
+                print(directions.Count);
+                
+                //break;
+            }
+        }
+        print(count);
     }
 }

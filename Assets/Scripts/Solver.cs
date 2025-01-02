@@ -13,7 +13,7 @@ public static class Solver
         Vector2Int.left
     };
 
-    public static void FindReachablePositions(Board board)
+    public static HashSet<Visit> FindReachablePositions(Board board)
     {
         Piece[] pieces = board.pieceList;
         int[,] boardIndices = new int[3, 3];
@@ -34,11 +34,11 @@ public static class Solver
         Vector2Int posOfZero = FindIndexOfZero(boardIndices);
 
         Queue<Visit> queue = new Queue<Visit>();
-        HashSet<Visit> visits = new HashSet<Visit>(); //used to find the routes later
+        HashSet<Visit> visits = new HashSet<Visit>();
         HashSet<int> exploredBoards = new HashSet<int>();
 
         int startingBoard = BoardPacker.IndicesToInteger(boardIndices);
-        Visit firstVisit = new Visit(startingBoard, posOfZero, -1);
+        Visit firstVisit = new Visit(startingBoard, posOfZero, null, 0);
         queue.Enqueue(firstVisit);
         visits.Add(firstVisit);
         exploredBoards.Add(startingBoard);
@@ -48,8 +48,9 @@ public static class Solver
             Visit currentVisit = queue.Dequeue();
             BoardPacker.IntegerToIndices(boardIndices, currentVisit.board); //unpack the board
 
-            foreach (Vector2Int dir in directions)
+            for (int i = 0; i < 4; i++)
             {
+                Vector2Int dir = directions[i];
                 if (!IsValidDirection(currentVisit.idxOfZero, dir))
                 {
                     continue; //direction out of bounds
@@ -68,13 +69,17 @@ public static class Solver
                 }
 
                 exploredBoards.Add(newBoard);
-                Visit newVisit = new Visit(newBoard, currentVisit.idxOfZero + dir, currentVisit.board);
+                Visit newVisit = new Visit(newBoard, currentVisit.idxOfZero + dir, currentVisit, (byte)i);
                 visits.Add(newVisit);
                 queue.Enqueue(newVisit);
             }
+            foreach (Vector2Int dir in directions)
+            {
+                
+            }
         }
 
-        Debug.Log(visits.Count);
+        return visits;
     }
 
     private static Vector2Int FindIndexOfZero(int[,] indices)
@@ -156,35 +161,66 @@ public static class Solver
         return false;
     }
 
-    private static Bounds2DInt LocalToGlobalBounds(Bounds2DInt localBounds, Vector2Int pos)
+    public static bool IsSolution(int board, Piece[] pieces)
     {
-        return localBounds + pos * 5;
+        if (BoardPacker.GetDigit(board, Vector2Int.right) == 8)
+        {
+            Piece spacecraft = pieces[8];
+
+            foreach (Bounds2DInt bounds in spacecraft.localBarriers)
+            {
+                Bounds2DInt sweptBounds = LocalToGlobalBounds(bounds, Vector2Int.down);
+                sweptBounds.SwipeBounds(Vector2Int.down * 5);
+
+                Piece[] sidePieces = 
+                {
+                    pieces[BoardPacker.GetDigit(board, 0)],
+                    pieces[BoardPacker.GetDigit(board, 6)]
+                };
+                Vector2Int[] positions = { new Vector2Int(-1, -1), new Vector2Int(1, -1) };
+
+                for (int i = 0; i < sidePieces.Length; i++)
+                {
+                    Piece piece = sidePieces[i];
+                    if (piece == null)
+                    {
+                        continue;
+                    }
+                    foreach (Bounds2DInt b in piece.localBarriers)
+                    {
+                        Bounds2DInt worldBounds = LocalToGlobalBounds(b, positions[i]);
+
+                        if (sweptBounds.Intersects(worldBounds))
+                        {
+                            return false; //intersection found
+                        }
+                    }
+                }
+            }
+
+            return true; //no collisions
+        }
+        return false; //spacecraft not even at the exit
     }
 
-    private struct Visit
+    public static List<(int, int)> VisitToPath(Visit endVisit)
     {
-        public int board;
-        public Vector2Int idxOfZero;
-        public int boardCameFrom;
+        List<(int, int)> outList = new();
+        outList.Add((0, endVisit.board));
 
-        public Visit(int board, Vector2Int idxOfZero, int boardCameFrom)
-        {
-            this.board = board;
-            this.idxOfZero = idxOfZero;
-            this.boardCameFrom = boardCameFrom;
-        }
+        Visit visit = endVisit;
 
-        public override int GetHashCode()
+        while (visit.visitCameFrom != null)
         {
-            return board.GetHashCode();
+            outList.Add((visit.direction, visit.board));
+            visit = visit.visitCameFrom;
         }
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-            return ((Visit)obj).board == board;
-        }
+        outList.Reverse();
+        return outList;
+    }
+
+    public static Bounds2DInt LocalToGlobalBounds(Bounds2DInt localBounds, Vector2Int pos)
+    {
+        return localBounds + pos * 5;
     }
 }

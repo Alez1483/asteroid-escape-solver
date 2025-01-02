@@ -47,6 +47,16 @@ public static class BoardPacker
         return idx.x * 3 + idx.y;
     }
 
+    public static int GetDigit(int board, Vector2Int idx)
+    {
+        return board / multipliers[Vector2ToFlattenedIndex(idx)] % 10;
+    }
+    public static int GetDigit(int board, int idx)
+    {
+        return board / multipliers[idx] % 10;
+    }
+
+
     //returns a board where empty is moved towards dir
     //will only work if the digit at idxOfZero is 0
     public static int MoveEmpty(int board, Vector2Int idxOfZero, Vector2Int dir)
