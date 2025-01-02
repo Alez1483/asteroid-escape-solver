@@ -9,28 +9,42 @@ public class Board : MonoBehaviour
     
     private void Awake()
     {
+        double time = Time.realtimeSinceStartupAsDouble;
+
         Piece spacecraft = pieceList[8];
 
         var visits = Solver.FindReachablePositions(this);
 
-        int count = 0;
+        List<int> shortestPath = null;
 
         foreach (Visit visit in visits)
         {
             if (Solver.IsSolution(visit.board, pieceList))
             {
                 var directions = Solver.VisitToPath(visit);
-                //string arrows = "^>v<";
-                //
-                //foreach (var dir in directions)
-                //{
-                //    print(arrows[dir.Item1] + ": " + dir.Item2);
-                //}
-                print(directions.Count);
-                
-                //break;
+
+                if (shortestPath == null || directions.Count < shortestPath.Count)
+                {
+                    shortestPath = directions;
+                }
             }
         }
-        print(count);
+        time = Time.realtimeSinceStartupAsDouble - time;
+
+        if (shortestPath == null)
+        {
+            print("The given arrangement does not have solutions, make sure you put every piece correctly");
+        }
+
+        string[] directionTexts = { "Down v", "Left <", "Up ^", "Right >" };
+
+        print("Moves for the shortest path are as follows:");
+
+        foreach (var dir in shortestPath)
+        {
+            print(directionTexts[dir]);
+        }
+        print("Done!");
+        print("Search took " + time + " seconds in total. Shortest path consists of " + shortestPath.Count + " moves");
     }
 }

@@ -203,16 +203,16 @@ public static class Solver
         return false; //spacecraft not even at the exit
     }
 
-    public static List<(int, int)> VisitToPath(Visit endVisit)
+    public static List<int> VisitToPath(Visit endVisit)
     {
-        List<(int, int)> outList = new();
-        outList.Add((0, endVisit.board));
+        List<int> outList = new();
+        outList.Add(0);
 
         Visit visit = endVisit;
 
         while (visit.visitCameFrom != null)
         {
-            outList.Add((visit.direction, visit.board));
+            outList.Add(visit.direction);
             visit = visit.visitCameFrom;
         }
         outList.Reverse();
