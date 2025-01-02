@@ -16,20 +16,8 @@ public static class Solver
     public static HashSet<Visit> FindReachablePositions(Board board)
     {
         Piece[] pieces = board.pieceList;
-        int[,] boardIndices = new int[3, 3];
 
-        for (int i = 0; i < pieces.Length; i++)
-        {
-            Piece piece = pieces[i];
-
-            if (piece == null)
-            {
-                continue;
-            }
-
-            Vector2Int index = Vector2Int.RoundToInt(piece.transform.position) + Vector2Int.one;
-            boardIndices[index.x, index.y] = i;
-        }
+        int[,] boardIndices = board.PiecepositionsToIndices();
 
         Vector2Int posOfZero = FindIndexOfZero(boardIndices);
 
@@ -82,7 +70,7 @@ public static class Solver
         return visits;
     }
 
-    private static Vector2Int FindIndexOfZero(int[,] indices)
+    public static Vector2Int FindIndexOfZero(int[,] indices)
     {
         for (int x = 0; x < 3; x++)
         {

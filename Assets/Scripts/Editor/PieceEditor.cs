@@ -13,19 +13,30 @@ public class PieceEditor : Editor
         var root = new VisualElement();
         InspectorElement.FillDefaultInspector(root, serializedObject, this);
 
-        var rotateBtn = new Button(RotatePiece);
+        var rotateBtn = new Button(() => RotatePiece((Piece)target, "Rotate piece"));
         rotateBtn.text = "Rotate 90 deg clockwise";
     
         root.Add(rotateBtn);
     
         return root;
     }
-    
-    private void RotatePiece()
+
+    [MenuItem("Tools/Piece editing/Rotate selected pieces #r")]
+    public static void RotateSelectedPieces()
     {
-        Piece piece = (Piece)target;
-        Undo.RecordObject(piece, "Rotate piece");
-        Undo.RecordObject(piece.transform, "Rotate piece");
+        foreach (var obj in Selection.gameObjects)
+        {
+            if (obj.TryGetComponent(out Piece piece))
+            {
+                RotatePiece(piece, "Rotate selected");
+            }
+        }
+    }
+
+    private static void RotatePiece(Piece piece, string msg)
+    {
+        Undo.RecordObject(piece, msg);
+        Undo.RecordObject(piece.transform, msg);
         for (int i = 0; i < piece.localBarriers.Length; i++)
         {
             Bounds2DInt bounds = piece.localBarriers[i];
