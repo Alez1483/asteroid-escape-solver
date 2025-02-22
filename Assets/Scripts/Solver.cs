@@ -61,10 +61,6 @@ public static class Solver
                 visits.Add(newVisit);
                 queue.Enqueue(newVisit);
             }
-            foreach (Vector2Int dir in directions)
-            {
-                
-            }
         }
 
         return visits;
